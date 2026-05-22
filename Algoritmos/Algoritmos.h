@@ -12,4 +12,5 @@ void leMatrizes(FILE* arq, int tam, int qtd, float **A, float **B);
 void gaussJacobi(int tam, float **matriz, float *B, float acc);
 void fatoracaoLU(int tam, float **A, float **L, float **U);
 void resolveLU(int tam, float **L, float **U, float *B, float X[]);
+void escalonamentoGauss(int tam, float **A, float *B, float *X);
 #endif
