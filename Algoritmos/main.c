@@ -1,10 +1,8 @@
 #include "Algoritmos.h"
 
 int main(int argc, char **argv){
-
-    clock_t start, end;
-    start = clock();
-
+    //Arquivo e Inicialização da matriz
+    #pragma region 
     if (argc < 2) {
         printf("Uso: %s <nome_do_arquivo>\n", argv[0]);
         return 1;
@@ -41,14 +39,32 @@ int main(int argc, char **argv){
         C[j]=B[0][j];
     }
     // ate aqui
+    #pragma endregion
+    
+    // Gauss Seidel
+    #pragma region
+    clock_t iniSeidel, fimSeidel;
+    iniSeidel = clock();
+    gaussSeidel(tam, A, C, acc);
+    fimSeidel = clock();
+
+    printf("\nGauss Seidel: %5.2f seg.\n", ((double)(iniSeidel - fimSeidel)) / CLOCKS_PER_SEC);
+    #pragma endregion 
+
+    // Gauss Jacobi
+    #pragma region
+    clock_t start, end;
+    start = clock();
 
     gaussJacobi(tam, A, C, acc);
 
     end = clock();
-    printf("\nTempo de execucao: %5.2f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    printf("\nGauss Jac: %5.2f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    
+    #pragma endregion
 
-
-
+    // LU
+    #pragma region
     //Fatoração LU feita uma única vez para matriz A
     float L[tam][tam];
     float U[tam][tam];
@@ -79,6 +95,7 @@ int main(int argc, char **argv){
                s + 1, ((double)(s_end - s_start)) / CLOCKS_PER_SEC);
     }
 
+    #pragma endregion
 
 
      return 0;

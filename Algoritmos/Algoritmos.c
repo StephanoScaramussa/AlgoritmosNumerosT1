@@ -49,39 +49,50 @@ void leMatrizes(FILE* arq, int tam, int qtd, float A[tam][tam], float B[qtd][tam
     }
 }
 
-// void gaussSeidel(int tam, float matriz[tam][tam], float B[]){
-//     // Monta as variaveis iniciais para resolver o problema
-//     float variaveis[tam];
-//     for(int i=0; i<tam; i++){
-//         variaveis[i] = B[i]/(matriz[i][i]);
-//     }
-//     imprimeVetor(variaveis, tam, "variaveis");
+void gaussSeidel(int tam, float matriz[tam][tam], float B[], float acc){
+    // Monta as variaveis iniciais para resolver o problema
+    float variaveis[tam];
     
 
-//     // Itera as linhas, uma variavel por linha
-//     for(int j=0; j<tam; j++){
-//         // Aqui ta calculando o valor de uma variavel usando a equação doida lá usando acumulador, pq senao ia ser hard codado
-//         int i= tam -1;
-//         float soma = B[j];
-//         printf("valor de B: %f - ", soma);
+    for(int i=0; i<tam; i++){
+        variaveis[i] = B[i]/(matriz[i][i]);
+    }
 
-//         for(i; i>=0; i--){
-//             if(i != j){
-//                 printf("%f ", matriz[j][i]);
-//                 soma = soma - matriz[j][i]*variaveis[i];
-//             }
-//         }
-//         printf("/%f \n", matriz[j][j]);
-//         // Divide pelo valor da variavel naquele momento
-//         soma = soma/matriz[j][j];
-//         variaveis[j] = soma;
-//         }
+    float erroRelativo;
+
+    do{
+    float maiorDif = 0, maiorVarNova = 0;
+    // Itera as linhas, uma variavel por linha
+    for(int j=0; j<tam; j++){
+        // Aqui ta calculando o valor de uma variavel usando a equação doida lá usando acumulador, pq senao ia ser hard codado
+        
+        float soma = B[j];
+
+        for(int i= tam -1; i>=0; i--){
+            if(i != j){
+                soma = soma - matriz[j][i]*variaveis[i];
+            }
+        }
+        // Divide pelo valor da variavel naquele momento
+        float valorAntigo = variaveis[j];
+        variaveis[j] = soma/matriz[j][j];
+
+        if(fabs(variaveis[j]) > maiorVarNova){
+            maiorVarNova = fabs(variaveis[j]); 
+        }
+        float dif = fabs(variaveis[j] - valorAntigo);
+        if ( dif > maiorDif){
+            maiorDif = dif;
+        }
+        }
     
-//     printf("\n");
-//     }
+    erroRelativo = maiorDif/maiorVarNova;
 
+    } while (erroRelativo > acc);
+    imprimeVetor(variaveis, tam, "Respostas");
+}
 
-// Funfando (PEDRO GAY E PRETO)
+// Funfando 
 void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
     // Monta as variaveis iniciais para resolver o problema
     float variaveis[tam];
@@ -89,10 +100,10 @@ void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
         variaveis[i] = B[i]/(matriz[i][i]);
     }
 
-    float variaveisNovas[tam];
-    float erroRelativo;
+    float variaveisNovas[tam], erroRelativo;
 
     do{
+    float maiorDif = 0, maiorVarNova = 0;
     // Itera as linhas, uma variavel por linha
     for(int j=0; j<tam; j++){
         // Aqui ta calculando o valor de uma variavel usando a equação doida lá usando acumulador, pq senao ia ser hard codado
@@ -106,20 +117,16 @@ void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
         }
         // Divide pelo valor da variavel naquele momento
         variaveisNovas[j] = soma/matriz[j][j];
-        }
-    
-    float maiorDif = 0;
-    float maiorVarNova = 0;
 
-    for(int i=0; i< tam; i++){
-        if(fabs(variaveisNovas[i]) > maiorVarNova){
-            maiorVarNova = variaveisNovas[i]; 
+        if(fabs(variaveisNovas[j]) > maiorVarNova){
+            maiorVarNova = fabs(variaveisNovas[j]); 
         }
-        float dif = fabs(variaveisNovas[i] - variaveis[i]);
+        float dif = fabs(variaveisNovas[j] - variaveis[j]);
         if ( dif > maiorDif){
             maiorDif = dif;
         }
-    }
+        }
+    
     
     erroRelativo = maiorDif/maiorVarNova;
 
