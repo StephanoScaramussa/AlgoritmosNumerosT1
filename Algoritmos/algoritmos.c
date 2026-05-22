@@ -1,7 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#include "algoritmos.h"
 
 void imprimeMatriz(int linha, int coluna, float matriz[linha][coluna], char *opcao){
     printf("matriz %s = \n", opcao);
@@ -132,50 +129,4 @@ void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
 
     } while (erroRelativo > acc);
     imprimeVetor(variaveisNovas, tam, "Respostas");
-}
-
-int main(int argc, char **argv){
-    if (argc < 2) {
-        printf("Uso: %s <nome_do_arquivo>\n", argv[0]);
-        return 1;
-    }
-
-    char *nomearq = argv[1];
-    printf("Lendo arquivo: %s\n", nomearq);
-    
-    FILE* arq = fopen(nomearq, "r");
-    if (arq == NULL) {
-        printf("Erro ao abrir o arquivo!\n");
-        return 1;
-    }
-
-    int qtd, tam;
-    float acc, digit;
-
-    // Lê o "cabeçalho" para descobrir o tamanho das matrizes
-    if (fscanf(arq, "%f", &digit) == 1) qtd = (int)digit;
-    if (fscanf(arq, "%f", &digit) == 1) tam = (int)digit;
-    if (fscanf(arq, "%f", &digit) == 1) acc = digit;
-
-    float A[tam][tam];
-    float B[qtd][tam];
-
-    leMatrizes(arq, tam, qtd, A, B);
-    imprimeMatriz(tam, tam, A, "A");
-
-    fclose(arq);
-
-
-    // virar funcao
-    float C[tam];
-
-    for(int j=0; j<tam; j++){
-        C[j]=B[0][j];
-    }
-    // ate aqui
-
-    gaussJacobi(tam, A, C, acc);
-
-
-    return 0;
 }
