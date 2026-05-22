@@ -1,5 +1,5 @@
-#ifndef
-#define algoritmos
+#ifndef Algoritmos
+#define Algoritmos
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

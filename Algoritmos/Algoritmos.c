@@ -1,4 +1,4 @@
-#include "algoritmos.h"
+#include "Algoritmos.h"
 
 void imprimeMatriz(int linha, int coluna, float matriz[linha][coluna], char *opcao){
     printf("matriz %s = \n", opcao);
