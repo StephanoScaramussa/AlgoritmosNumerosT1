@@ -81,7 +81,7 @@ void leMatrizes(FILE* arq, int tam, int qtd, float A[tam][tam], float B[qtd][tam
 //     }
 
 
-// Funfando
+// Funfando (PEDRO GAY E PRETO)
 void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
     // Monta as variaveis iniciais para resolver o problema
     float variaveis[tam];
@@ -129,4 +129,64 @@ void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
 
     } while (erroRelativo > acc);
     imprimeVetor(variaveisNovas, tam, "Respostas");
+}
+
+
+/* -------------------------------------------------------
+Deve ser chamada UMA vez por arquivo de entrada, pois todos os sistemas compartilham a mesma matriz A.
+   ------------------------------------------------------- */
+void fatoracaoLU(int tam, float A[tam][tam], float L[tam][tam], float U[tam][tam]){
+    int i, j, k;
+ 
+    for(i = 0; i < tam; i++)
+        for(j = 0; j < tam; j++){
+            L[i][j] = 0.0f;
+            U[i][j] = 0.0f;
+        }
+ 
+    for(i = 0; i < tam; i++){
+        /* Preenche linha i de U */
+        for(j = i; j < tam; j++){
+            float soma = 0.0f;
+            for(k = 0; k < i; k++)
+                soma += L[i][k] * U[k][j];
+            U[i][j] = A[i][j] - soma;
+        }
+ 
+        /* Preenche coluna i de L */
+        L[i][i] = 1.0f;
+        for(j = i + 1; j < tam; j++){
+            float soma = 0.0f;
+            for(k = 0; k < i; k++)
+                soma += L[j][k] * U[k][i];
+            L[j][i] = (A[j][i] - soma) / U[i][i];
+        }
+    }
+}
+
+
+/* -------------------------------------------------------
+Resolve A*X = B usando L e U já fatorados: Reutilize L e U para cada sistema do arquivo!
+   ------------------------------------------------------- */
+void resolveLU(int tam, float L[tam][tam], float U[tam][tam], float B[], float X[]){
+    float y[tam];
+    int i, j;
+ 
+    /* L*y = B  (substituição progressiva) */
+    for(i = 0; i < tam; i++){
+        float soma = 0.0f;
+        for(j = 0; j < i; j++){
+            soma += L[i][j] * y[j];
+        }
+        y[i] = (B[i] - soma) / L[i][i];
+    }
+ 
+    /* U*X = y  (substituição retroativa) */
+    for(i = tam - 1; i >= 0; i--){
+        float soma = 0.0f;
+        for(j = i + 1; j < tam; j++){
+            soma += U[i][j] * X[j];
+        }
+        X[i] = (y[i] - soma) / U[i][i];
+    }
 }
