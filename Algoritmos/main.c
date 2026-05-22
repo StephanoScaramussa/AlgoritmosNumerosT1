@@ -27,15 +27,18 @@ int main(int argc, char **argv){
     if (fscanf(arq, "%f", &digit) == 1) tam = (int)digit;
     if (fscanf(arq, "%f", &digit) == 1) acc = digit;
 
-    float A[tam][tam];
-    float B[qtd][tam];
+    float **A = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++) A[i] = (float*)malloc(tam * sizeof(float));
+    
+    float **B = (float**)malloc(qtd * sizeof(float*));
+    for(int i = 0; i < qtd; i++) B[i] = (float*)malloc(tam * sizeof(float));
 
     leMatrizes(arq, tam, qtd, A, B);
     fclose(arq);
     //imprimeMatriz(tam, tam, A, "A");
 
     // virar funcao
-    float C[tam];
+    float *C = (float*)malloc(tam * sizeof(float));
 
     for(int j=0; j<tam; j++){
         C[j]=B[0][j];
@@ -50,8 +53,11 @@ int main(int argc, char **argv){
 
 
     //Fatoração LU feita uma única vez para matriz A
-    float L[tam][tam];
-    float U[tam][tam];
+    float **L = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++) L[i] = (float*)malloc(tam * sizeof(float));
+    
+    float **U = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++) U[i] = (float*)malloc(tam * sizeof(float));
 
     clock_t lu_start = clock();
     fatoracaoLU(tam, A, L, U);
@@ -63,11 +69,11 @@ int main(int argc, char **argv){
 
     //Calculo de tempo da resolução das matrizes L e U ja feitas na função anterior
     for(int s = 0; s < qtd; s++){
-        float C[tam];
+        float *C = (float*)malloc(tam * sizeof(float));
         for(int j = 0; j < tam; j++)
             C[j] = B[s][j];
 
-        float X[tam];
+        float *X = (float*)malloc(tam * sizeof(float));
 
         clock_t s_start = clock();
         resolveLU(tam, L, U, C, X);
@@ -77,9 +83,25 @@ int main(int argc, char **argv){
         imprimeVetor(X, tam, "X (LU)");
         printf("Tempo resolucao sistema %d (LU): %5.6f seg.\n\n",
                s + 1, ((double)(s_end - s_start)) / CLOCKS_PER_SEC);
+        
+        free(C);
+        free(X);
     }
 
+    // Liberar memória alocada dinamicamente
+    for(int i = 0; i < tam; i++) free(A[i]);
+    free(A);
+    
+    for(int i = 0; i < qtd; i++) free(B[i]);
+    free(B);
+    
+    free(C);
+    
+    for(int i = 0; i < tam; i++) free(L[i]);
+    free(L);
+    
+    for(int i = 0; i < tam; i++) free(U[i]);
+    free(U);
 
-
-     return 0;
+    return 0;
 }

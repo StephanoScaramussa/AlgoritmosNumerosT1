@@ -1,6 +1,6 @@
 #include "Algoritmos.h"
 
-void imprimeMatriz(int linha, int coluna, float matriz[linha][coluna], char *opcao){
+void imprimeMatriz(int linha, int coluna, float **matriz, char *opcao){
     printf("matriz %s = \n", opcao);
     for(int i=0; i<linha; i++){
         for(int j=0; j<coluna; j++){
@@ -20,7 +20,7 @@ void imprimeVetor(float vetor[], int tam, char *opcao){
         printf("\n");
 }
 
-void leMatrizes(FILE* arq, int tam, int qtd, float A[tam][tam], float B[qtd][tam]){
+void leMatrizes(FILE* arq, int tam, int qtd, float **A, float **B){
     float digit;
     int linha = 0, coluna = 0;
 
@@ -81,15 +81,15 @@ void leMatrizes(FILE* arq, int tam, int qtd, float A[tam][tam], float B[qtd][tam
 //     }
 
 
-// Funfando (PEDRO GAY E PRETO)
-void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
+// Funfando
+void gaussJacobi(int tam, float **matriz, float *B, float acc){
     // Monta as variaveis iniciais para resolver o problema
-    float variaveis[tam];
+    float *variaveis = (float*)malloc(tam * sizeof(float));
     for(int i=0; i<tam; i++){
         variaveis[i] = B[i]/(matriz[i][i]);
     }
 
-    float variaveisNovas[tam];
+    float *variaveisNovas = (float*)malloc(tam * sizeof(float));
     float erroRelativo;
 
     do{
@@ -129,13 +129,11 @@ void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
 
     } while (erroRelativo > acc);
     imprimeVetor(variaveisNovas, tam, "Respostas");
+    free(variaveis);
+    free(variaveisNovas);
 }
 
-
-/* -------------------------------------------------------
-Deve ser chamada UMA vez por arquivo de entrada, pois todos os sistemas compartilham a mesma matriz A.
-   ------------------------------------------------------- */
-void fatoracaoLU(int tam, float A[tam][tam], float L[tam][tam], float U[tam][tam]){
+void fatoracaoLU(int tam, float **A, float **L, float **U){
     int i, j, k;
  
     for(i = 0; i < tam; i++)
@@ -145,7 +143,6 @@ void fatoracaoLU(int tam, float A[tam][tam], float L[tam][tam], float U[tam][tam
         }
  
     for(i = 0; i < tam; i++){
-        /* Preenche linha i de U */
         for(j = i; j < tam; j++){
             float soma = 0.0f;
             for(k = 0; k < i; k++)
@@ -153,7 +150,6 @@ void fatoracaoLU(int tam, float A[tam][tam], float L[tam][tam], float U[tam][tam
             U[i][j] = A[i][j] - soma;
         }
  
-        /* Preenche coluna i de L */
         L[i][i] = 1.0f;
         for(j = i + 1; j < tam; j++){
             float soma = 0.0f;
@@ -165,14 +161,10 @@ void fatoracaoLU(int tam, float A[tam][tam], float L[tam][tam], float U[tam][tam
 }
 
 
-/* -------------------------------------------------------
-Resolve A*X = B usando L e U já fatorados: Reutilize L e U para cada sistema do arquivo!
-   ------------------------------------------------------- */
-void resolveLU(int tam, float L[tam][tam], float U[tam][tam], float B[], float X[]){
-    float y[tam];
+void resolveLU(int tam, float **L, float **U, float B[], float X[]){
+    float *y = (float*)malloc(tam * sizeof(float));
     int i, j;
  
-    /* L*y = B  (substituição progressiva) */
     for(i = 0; i < tam; i++){
         float soma = 0.0f;
         for(j = 0; j < i; j++){
@@ -180,8 +172,7 @@ void resolveLU(int tam, float L[tam][tam], float U[tam][tam], float B[], float X
         }
         y[i] = (B[i] - soma) / L[i][i];
     }
- 
-    /* U*X = y  (substituição retroativa) */
+
     for(i = tam - 1; i >= 0; i--){
         float soma = 0.0f;
         for(j = i + 1; j < tam; j++){
@@ -189,4 +180,6 @@ void resolveLU(int tam, float L[tam][tam], float U[tam][tam], float B[], float X
         }
         X[i] = (y[i] - soma) / U[i][i];
     }
+    
+    free(y);
 }
