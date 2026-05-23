@@ -55,10 +55,15 @@ void gaussSeidel(int tam, float **matriz, float B[], float acc){
     
 
     for(int i=0; i<tam; i++){
+        if(fabs(matriz[i][i]) < 1e-10){
+            printf("Diagonal 0 ou proximo\n");
+        }
         variaveis[i] = B[i]/(matriz[i][i]);
     }
 
     float erroRelativo;
+    int iteracao = 0;
+    int maxIteracoes = 10000;
 
     do{
     float maiorDif = 0, maiorVarNova = 0;
@@ -74,8 +79,18 @@ void gaussSeidel(int tam, float **matriz, float B[], float acc){
             }
         }
         // Divide pelo valor da variavel naquele momento
+        if(fabs(matriz[j][j]) < 1e-10){
+            printf("Divisão por zero na linha %d\n", j);
+            return;
+        }
         float valorAntigo = variaveis[j];
         variaveis[j] = soma/matriz[j][j];
+
+        // Detecta valores infinitos ou muito grandes
+        if(!isfinite(variaveis[j])){
+            printf("Valor infinito detectado na iteracao %d, variavel %d\n", iteracao, j);
+            return;
+        }
 
         if(fabs(variaveis[j]) > maiorVarNova){
             maiorVarNova = fabs(variaveis[j]); 
@@ -86,10 +101,22 @@ void gaussSeidel(int tam, float **matriz, float B[], float acc){
         }
         }
     
-    erroRelativo = maiorDif/maiorVarNova;
+    if(maiorVarNova < 1e-10){
+        printf("Nenhuma permuta possivel\n");
+        erroRelativo = 0;
+    } else {
+        erroRelativo = maiorDif/maiorVarNova;
+    }
+    
+    iteracao++;
 
-    } while (erroRelativo > acc);
-    if(tam<200){
+    } while (erroRelativo > acc && iteracao < maxIteracoes);
+    
+    if(iteracao >= maxIteracoes){
+        printf("Seidel atingiu limite de %d iteracoes e nao converge\n", maxIteracoes);
+    }
+    
+    if(tam<=200){
         imprimeVetor(variaveis, tam, "Respostas");
 
     }
@@ -100,10 +127,15 @@ void gaussJacobi(int tam, float **matriz, float B[], float acc){
     // Monta as variaveis iniciais para resolver o problema
     float *variaveis = (float*)malloc(tam * sizeof(float));
     for(int i=0; i<tam; i++){
+        if(fabs(matriz[i][i]) < 1e-10){
+            printf("Valor 0 ou proximo\n");
+        }
         variaveis[i] = B[i]/(matriz[i][i]);
     }
 
     float variaveisNovas[tam], erroRelativo;
+    int iteracao = 0;
+    int maxIteracoes = 10000;
 
     do{
     float maiorDif = 0, maiorVarNova = 0;
@@ -119,7 +151,18 @@ void gaussJacobi(int tam, float **matriz, float B[], float acc){
             }
         }
         // Divide pelo valor da variavel naquele momento
+        if(fabs(matriz[j][j]) < 1e-10){
+            printf("Divisão por zero na linha %d\n", j);
+            free(variaveis);
+            return;
+        }
         variaveisNovas[j] = soma/matriz[j][j];
+
+        if(!isfinite(variaveisNovas[j])){
+            printf("Valor infinito na iteracao %d, variavel %d\n", iteracao, j);
+            free(variaveis);
+            return;
+        }
 
         if(fabs(variaveisNovas[j]) > maiorVarNova){
             maiorVarNova = fabs(variaveisNovas[j]); 
@@ -130,15 +173,26 @@ void gaussJacobi(int tam, float **matriz, float B[], float acc){
         }
         }
     
-    
-    erroRelativo = maiorDif/maiorVarNova;
+    if(maiorVarNova < 1e-10){
+        printf("Nenhuma permuta possivel\n");
+        erroRelativo = 0;
+    } else {
+        erroRelativo = maiorDif/maiorVarNova;
+    }
 
     for(int i=0; i<tam; i++){
             variaveis[i] = variaveisNovas[i];
         }
+    
+    iteracao++;
 
-    } while (erroRelativo > acc);
-    if(tam<200){
+    } while (erroRelativo > acc && iteracao < maxIteracoes);
+    
+    if(iteracao >= maxIteracoes){
+        printf("Jacobi atingiu limite de %d iteracoes e nao converge\n", maxIteracoes);
+    }
+    
+    if(tam<=200){
         imprimeVetor(variaveisNovas, tam, "Respostas");
     }
     free(variaveis);
@@ -277,29 +331,48 @@ void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
     clock_t start, end;
 
     // GAUSS-SEIDEL PARA CADA MATRIZ
-    printf("\nGAUSS SEIDEL");
+    printf("\n--------------GAUSS SEIDEL--------------");
     for(int s = 0; s < qtd; s++) {
         for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
 
         printf("\n[Sistema %d] ", s + 1);
         start = clock();
+        preparaDiagonal(tam,A,C);
         gaussSeidel(tam, A, C, acc);
         end = clock();
         printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
     }
 
     // GAUSS-JACOBI PARA CADA B
-    printf("\nGAUSS JACOBI");
+    printf("\n--------------GAUSS JACOBI--------------");
     for(int s = 0; s < qtd; s++) {
         for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
 
         printf("\n[Sistema %d] ", s + 1);
         start = clock();
+        preparaDiagonal(tam,A,C);
         gaussJacobi(tam, A, C, acc);
         end = clock();
         printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
     }
 
+    //ESCALONAMENTO GAUSS
+    printf("\n--------------ESCALONAMENTO GAUSS--------------");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        float *X = (float*)malloc(tam * sizeof(float));
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        escalonamentoGauss(tam, A, C, X);
+        end = clock();
+        if(tam <= 200){
+            imprimeVetor(X, tam, "Respostas");
+        }
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+        free(X);
+    }
+    
     //FATORAÇÃO LU
     #pragma region
     float **L = (float**)malloc(tam * sizeof(float*));
@@ -312,7 +385,7 @@ void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
     start = clock();
     fatoracaoLU(tam, A, L, U);
     end = clock();
-    printf("\nTempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    printf("\n--------------FATORACAO LU (matriz A) = %5.6f seg.--------------\n", ((double)(end - start)) / CLOCKS_PER_SEC);
 
     // RESOLUÇÃO DO LU PARA CADA MATRIZ B
     for(int s = 0; s < qtd; s++){
@@ -324,9 +397,9 @@ void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
         resolveLU(tam, L, U, C, X);
         end = clock();
 
-        printf("LU - Sistema %d\n", s + 1);
-        if(tam < 200){
-            imprimeVetor(X, tam, "X (LU)");
+        printf("[Sistema %d] ", s + 1);
+        if(tam <= 200){
+            imprimeVetor(X, tam, "Respostas");
         }
         printf("Tempo: %d (LU): %5.6f seg.\n\n",
                s + 1, ((double)(end - start)) / CLOCKS_PER_SEC);
@@ -341,7 +414,29 @@ void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
     free(L);
     free(U);
     free(C);
-    #pragma endregion
+    #pragma endregion    
+}
 
-    
+void preparaDiagonal(int tam, float **matriz, float *B) {
+    for (int i = 0; i < tam; i++) {
+        int linhaMaior = i;
+        float maiorValor = fabs(matriz[i][i]);
+        
+        for (int k = i + 1; k < tam; k++) {
+            if (fabs(matriz[k][i]) > maiorValor) {
+                maiorValor = fabs(matriz[k][i]);
+                linhaMaior = k;
+            }
+        }
+        
+        if (linhaMaior != i) {
+            float *temp = matriz[i];
+            matriz[i] = matriz[linhaMaior];
+            matriz[linhaMaior] = temp;
+            
+            float tempB = B[i];
+            B[i] = B[linhaMaior];
+            B[linhaMaior] = tempB;
+        }
+    }
 }
