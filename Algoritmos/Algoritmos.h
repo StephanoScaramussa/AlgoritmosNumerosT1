@@ -14,4 +14,5 @@ void gaussJacobi(int tam, float **matriz, float B[], float acc);
 void fatoracaoLU(int tam, float **A, float **L, float **U);
 void resolveLU(int tam, float **L, float **U, float *B, float X[]);
 void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc);
+void escalonamentoGauss(int tam, float **A, float *B, float *X);
 #endif
