@@ -1,5 +1,6 @@
 #include "Algoritmos.h"
 
+
 int main(int argc, char **argv){
     // Arquivo e Inicialização da Matriz
     #pragma region 
@@ -40,77 +41,13 @@ int main(int argc, char **argv){
     }
     #pragma endregion
     
-    // Gauss Seidel
-    #pragma region
-    clock_t iniSeidel, fimSeidel;
-    iniSeidel = clock();
-    gaussSeidel(tam, A, C, acc);
-    fimSeidel = clock();
-
-    printf("\nGauss Seidel: %5.6f seg.\n", ((double)(fimSeidel - iniSeidel)) / CLOCKS_PER_SEC);
-    #pragma endregion 
-
-    // Gauss Jacobi
-    #pragma region
-    for(int j = 0; j < tam; j++){
-        C[j] = B[0][j];
-    }
-
-    clock_t start, end;
-    start = clock();
-
-    gaussJacobi(tam, A, C, acc);
-
-    end = clock();
-    printf("\nGauss Jac: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
-    #pragma endregion
-
-    // LU
-    #pragma region
-    float **L = (float**)malloc(tam * sizeof(float*));
-    for(int i = 0; i < tam; i++) L[i] = (float*)malloc(tam * sizeof(float));
-    
-    float **U = (float**)malloc(tam * sizeof(float*));
-    for(int i = 0; i < tam; i++) U[i] = (float*)malloc(tam * sizeof(float));
-
-    clock_t lu_start = clock();
-    fatoracaoLU(tam, A, L, U);
-    clock_t lu_end = clock();
-
-    printf("\nTempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(lu_end - lu_start)) / CLOCKS_PER_SEC);
-
-    for(int s = 0; s < qtd; s++){
-        for(int j = 0; j < tam; j++)
-            C[j] = B[s][j];
-
-        float *X = (float*)malloc(tam * sizeof(float));
-
-        clock_t s_start = clock();
-        resolveLU(tam, L, U, C, X);
-        clock_t s_end = clock();
-
-        printf("=== Fatoracao LU - Sistema %d ===\n", s + 1);
-        imprimeVetor(X, tam, "X (LU)");
-        printf("Tempo resolucao sistema %d (LU): %5.6f seg.\n\n",
-               s + 1, ((double)(s_end - s_start)) / CLOCKS_PER_SEC);
-        
-        free(X);
-    }
-    #pragma endregion
+    relatorioDesempenho(tam, A, B, qtd, acc);
 
     for(int i = 0; i < tam; i++) free(A[i]);
     free(A);
     
     for(int i = 0; i < qtd; i++) free(B[i]);
     free(B);
-    
-    free(C);
-    
-    for(int i = 0; i < tam; i++) free(L[i]);
-    free(L);
-    
-    for(int i = 0; i < tam; i++) free(U[i]);
-    free(U);    
 
     return 0;
 }

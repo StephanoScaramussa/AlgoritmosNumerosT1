@@ -194,3 +194,77 @@ void resolveLU(int tam, float **L, float **U, float B[], float X[]){
     
     free(y);
 }
+
+void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
+    float *C = (float*)malloc(tam * sizeof(float));
+    clock_t start, end;
+
+    // GAUSS-SEIDEL PARA CADA MATRIZ
+    printf("\nGAUSS SEIDEL");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        gaussSeidel(tam, A, C, acc);
+        end = clock();
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    }
+
+    // GAUSS-JACOBI PARA CADA B
+    printf("\nGAUSS JACOBI");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        gaussJacobi(tam, A, C, acc);
+        end = clock();
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    }
+
+    //FATORAÇÃO LU
+    #pragma region
+    float **L = (float**)malloc(tam * sizeof(float*));
+    float **U = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++) {
+        L[i] = (float*)malloc(tam * sizeof(float));
+        U[i] = (float*)malloc(tam * sizeof(float));
+    }
+
+    start = clock();
+    fatoracaoLU(tam, A, L, U);
+    end = clock();
+    printf("\nTempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+
+    // RESOLUÇÃO DO LU PARA CADA MATRIZ B
+    for(int s = 0; s < qtd; s++){
+        for(int j = 0; j < tam; j++) C[j] = B[s][j];
+
+        float *X = (float*)malloc(tam * sizeof(float));
+
+        start = clock();
+        resolveLU(tam, L, U, C, X);
+        end = clock();
+
+        printf("LU - Sistema %d\n", s + 1);
+        if(tam < 200){
+            imprimeVetor(X, tam, "X (LU)");
+        }
+        printf("Tempo: %d (LU): %5.6f seg.\n\n",
+               s + 1, ((double)(end - start)) / CLOCKS_PER_SEC);
+        
+        free(X);
+    }
+
+    for(int i = 0; i < tam; i++) {
+        free(L[i]);
+        free(U[i]);
+    }
+    free(L);
+    free(U);
+    free(C);
+    #pragma endregion
+
+    
+}
