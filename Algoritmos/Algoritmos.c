@@ -49,7 +49,7 @@ void leMatrizes(FILE* arq, int tam, int qtd, float **A, float **B){
     }
 }
 
-void gaussSeidel(int tam, float matriz[tam][tam], float B[], float acc){
+void gaussSeidel(int tam, float **matriz, float B[], float acc){
     // Monta as variaveis iniciais para resolver o problema
     float variaveis[tam];
     
@@ -89,11 +89,14 @@ void gaussSeidel(int tam, float matriz[tam][tam], float B[], float acc){
     erroRelativo = maiorDif/maiorVarNova;
 
     } while (erroRelativo > acc);
-    imprimeVetor(variaveis, tam, "Respostas");
+    if(tam<200){
+        imprimeVetor(variaveis, tam, "Respostas");
+
+    }
 }
 
 // Funfando 
-void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
+void gaussJacobi(int tam, float **matriz, float B[], float acc){
     // Monta as variaveis iniciais para resolver o problema
     float *variaveis = (float*)malloc(tam * sizeof(float));
     for(int i=0; i<tam; i++){
@@ -135,9 +138,10 @@ void gaussJacobi(int tam, float matriz[tam][tam], float B[], float acc){
         }
 
     } while (erroRelativo > acc);
-    imprimeVetor(variaveisNovas, tam, "Respostas");
+    if(tam<200){
+        imprimeVetor(variaveisNovas, tam, "Respostas");
+    }
     free(variaveis);
-    free(variaveisNovas);
 }
 
 void fatoracaoLU(int tam, float **A, float **L, float **U){

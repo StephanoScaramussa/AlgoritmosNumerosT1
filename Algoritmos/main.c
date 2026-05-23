@@ -1,7 +1,7 @@
 #include "Algoritmos.h"
 
 int main(int argc, char **argv){
-    //Arquivo e Inicialização da matriz
+    // Arquivo e Inicialização da Matriz
     #pragma region 
     if (argc < 2) {
         printf("Uso: %s <nome_do_arquivo>\n", argv[0]);
@@ -20,7 +20,6 @@ int main(int argc, char **argv){
     int qtd, tam;
     float acc, digit;
 
-    // Lê o "cabeçalho" para descobrir o tamanho das matrizes
     if (fscanf(arq, "%f", &digit) == 1) qtd = (int)digit;
     if (fscanf(arq, "%f", &digit) == 1) tam = (int)digit;
     if (fscanf(arq, "%f", &digit) == 1) acc = digit;
@@ -33,15 +32,12 @@ int main(int argc, char **argv){
 
     leMatrizes(arq, tam, qtd, A, B);
     fclose(arq);
-    //imprimeMatriz(tam, tam, A, "A");
 
-    // virar funcao
     float *C = (float*)malloc(tam * sizeof(float));
 
-    for(int j=0; j<tam; j++){
-        C[j]=B[0][j];
+    for(int j = 0; j < tam; j++){
+        C[j] = B[0][j];
     }
-    // ate aqui
     #pragma endregion
     
     // Gauss Seidel
@@ -51,24 +47,26 @@ int main(int argc, char **argv){
     gaussSeidel(tam, A, C, acc);
     fimSeidel = clock();
 
-    printf("\nGauss Seidel: %5.2f seg.\n", ((double)(iniSeidel - fimSeidel)) / CLOCKS_PER_SEC);
+    printf("\nGauss Seidel: %5.6f seg.\n", ((double)(fimSeidel - iniSeidel)) / CLOCKS_PER_SEC);
     #pragma endregion 
 
     // Gauss Jacobi
     #pragma region
+    for(int j = 0; j < tam; j++){
+        C[j] = B[0][j];
+    }
+
     clock_t start, end;
     start = clock();
 
     gaussJacobi(tam, A, C, acc);
 
     end = clock();
-    printf("\nGauss Jac: %5.2f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
-    
+    printf("\nGauss Jac: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
     #pragma endregion
 
     // LU
     #pragma region
-    //Fatoração LU feita uma única vez para matriz A
     float **L = (float**)malloc(tam * sizeof(float*));
     for(int i = 0; i < tam; i++) L[i] = (float*)malloc(tam * sizeof(float));
     
@@ -79,13 +77,9 @@ int main(int argc, char **argv){
     fatoracaoLU(tam, A, L, U);
     clock_t lu_end = clock();
 
-    //imprimeMatriz(tam, tam, L, "L");
-    //imprimeMatriz(tam, tam, U, "U");
-    printf("Tempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(lu_end - lu_start)) / CLOCKS_PER_SEC);
+    printf("\nTempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(lu_end - lu_start)) / CLOCKS_PER_SEC);
 
-    //Calculo de tempo da resolução das matrizes L e U ja feitas na função anterior
     for(int s = 0; s < qtd; s++){
-        float *C = (float*)malloc(tam * sizeof(float));
         for(int j = 0; j < tam; j++)
             C[j] = B[s][j];
 
@@ -100,12 +94,10 @@ int main(int argc, char **argv){
         printf("Tempo resolucao sistema %d (LU): %5.6f seg.\n\n",
                s + 1, ((double)(s_end - s_start)) / CLOCKS_PER_SEC);
         
-        free(C);
         free(X);
     }
     #pragma endregion
 
-    // Liberar memória alocada dinamicamente
     for(int i = 0; i < tam; i++) free(A[i]);
     free(A);
     
@@ -119,8 +111,6 @@ int main(int argc, char **argv){
     
     for(int i = 0; i < tam; i++) free(U[i]);
     free(U);    
-    
-
 
     return 0;
 }
