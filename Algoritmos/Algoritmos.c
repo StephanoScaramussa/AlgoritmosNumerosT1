@@ -49,50 +49,64 @@ void leMatrizes(FILE* arq, int tam, int qtd, float **A, float **B){
     }
 }
 
-// void gaussSeidel(int tam, float matriz[tam][tam], float B[]){
-//     // Monta as variaveis iniciais para resolver o problema
-//     float variaveis[tam];
-//     for(int i=0; i<tam; i++){
-//         variaveis[i] = B[i]/(matriz[i][i]);
-//     }
-//     imprimeVetor(variaveis, tam, "variaveis");
+void gaussSeidel(int tam, float **matriz, float B[], float acc){
+    // Monta as variaveis iniciais para resolver o problema
+    float variaveis[tam];
     
 
-//     // Itera as linhas, uma variavel por linha
-//     for(int j=0; j<tam; j++){
-//         // Aqui ta calculando o valor de uma variavel usando a equação doida lá usando acumulador, pq senao ia ser hard codado
-//         int i= tam -1;
-//         float soma = B[j];
-//         printf("valor de B: %f - ", soma);
+    for(int i=0; i<tam; i++){
+        variaveis[i] = B[i]/(matriz[i][i]);
+    }
 
-//         for(i; i>=0; i--){
-//             if(i != j){
-//                 printf("%f ", matriz[j][i]);
-//                 soma = soma - matriz[j][i]*variaveis[i];
-//             }
-//         }
-//         printf("/%f \n", matriz[j][j]);
-//         // Divide pelo valor da variavel naquele momento
-//         soma = soma/matriz[j][j];
-//         variaveis[j] = soma;
-//         }
+    float erroRelativo;
+
+    do{
+    float maiorDif = 0, maiorVarNova = 0;
+    // Itera as linhas, uma variavel por linha
+    for(int j=0; j<tam; j++){
+        // Aqui ta calculando o valor de uma variavel usando a equação doida lá usando acumulador, pq senao ia ser hard codado
+        
+        float soma = B[j];
+
+        for(int i= tam -1; i>=0; i--){
+            if(i != j){
+                soma = soma - matriz[j][i]*variaveis[i];
+            }
+        }
+        // Divide pelo valor da variavel naquele momento
+        float valorAntigo = variaveis[j];
+        variaveis[j] = soma/matriz[j][j];
+
+        if(fabs(variaveis[j]) > maiorVarNova){
+            maiorVarNova = fabs(variaveis[j]); 
+        }
+        float dif = fabs(variaveis[j] - valorAntigo);
+        if ( dif > maiorDif){
+            maiorDif = dif;
+        }
+        }
     
-//     printf("\n");
-//     }
+    erroRelativo = maiorDif/maiorVarNova;
 
+    } while (erroRelativo > acc);
+    if(tam<200){
+        imprimeVetor(variaveis, tam, "Respostas");
 
-// Funfando
-void gaussJacobi(int tam, float **matriz, float *B, float acc){
+    }
+}
+
+// Funfando 
+void gaussJacobi(int tam, float **matriz, float B[], float acc){
     // Monta as variaveis iniciais para resolver o problema
     float *variaveis = (float*)malloc(tam * sizeof(float));
     for(int i=0; i<tam; i++){
         variaveis[i] = B[i]/(matriz[i][i]);
     }
 
-    float *variaveisNovas = (float*)malloc(tam * sizeof(float));
-    float erroRelativo;
+    float variaveisNovas[tam], erroRelativo;
 
     do{
+    float maiorDif = 0, maiorVarNova = 0;
     // Itera as linhas, uma variavel por linha
     for(int j=0; j<tam; j++){
         // Aqui ta calculando o valor de uma variavel usando a equação doida lá usando acumulador, pq senao ia ser hard codado
@@ -106,20 +120,16 @@ void gaussJacobi(int tam, float **matriz, float *B, float acc){
         }
         // Divide pelo valor da variavel naquele momento
         variaveisNovas[j] = soma/matriz[j][j];
-        }
-    
-    float maiorDif = 0;
-    float maiorVarNova = 0;
 
-    for(int i=0; i< tam; i++){
-        if(fabs(variaveisNovas[i]) > maiorVarNova){
-            maiorVarNova = variaveisNovas[i]; 
+        if(fabs(variaveisNovas[j]) > maiorVarNova){
+            maiorVarNova = fabs(variaveisNovas[j]); 
         }
-        float dif = fabs(variaveisNovas[i] - variaveis[i]);
+        float dif = fabs(variaveisNovas[j] - variaveis[j]);
         if ( dif > maiorDif){
             maiorDif = dif;
         }
-    }
+        }
+    
     
     erroRelativo = maiorDif/maiorVarNova;
 
@@ -128,9 +138,10 @@ void gaussJacobi(int tam, float **matriz, float *B, float acc){
         }
 
     } while (erroRelativo > acc);
-    imprimeVetor(variaveisNovas, tam, "Respostas");
+    if(tam<200){
+        imprimeVetor(variaveisNovas, tam, "Respostas");
+    }
     free(variaveis);
-    free(variaveisNovas);
 }
 
 void fatoracaoLU(int tam, float **A, float **L, float **U){
@@ -182,4 +193,78 @@ void resolveLU(int tam, float **L, float **U, float B[], float X[]){
     }
     
     free(y);
+}
+
+void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
+    float *C = (float*)malloc(tam * sizeof(float));
+    clock_t start, end;
+
+    // GAUSS-SEIDEL PARA CADA MATRIZ
+    printf("\nGAUSS SEIDEL");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        gaussSeidel(tam, A, C, acc);
+        end = clock();
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    }
+
+    // GAUSS-JACOBI PARA CADA B
+    printf("\nGAUSS JACOBI");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        gaussJacobi(tam, A, C, acc);
+        end = clock();
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    }
+
+    //FATORAÇÃO LU
+    #pragma region
+    float **L = (float**)malloc(tam * sizeof(float*));
+    float **U = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++) {
+        L[i] = (float*)malloc(tam * sizeof(float));
+        U[i] = (float*)malloc(tam * sizeof(float));
+    }
+
+    start = clock();
+    fatoracaoLU(tam, A, L, U);
+    end = clock();
+    printf("\nTempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+
+    // RESOLUÇÃO DO LU PARA CADA MATRIZ B
+    for(int s = 0; s < qtd; s++){
+        for(int j = 0; j < tam; j++) C[j] = B[s][j];
+
+        float *X = (float*)malloc(tam * sizeof(float));
+
+        start = clock();
+        resolveLU(tam, L, U, C, X);
+        end = clock();
+
+        printf("LU - Sistema %d\n", s + 1);
+        if(tam < 200){
+            imprimeVetor(X, tam, "X (LU)");
+        }
+        printf("Tempo: %d (LU): %5.6f seg.\n\n",
+               s + 1, ((double)(end - start)) / CLOCKS_PER_SEC);
+        
+        free(X);
+    }
+
+    for(int i = 0; i < tam; i++) {
+        free(L[i]);
+        free(U[i]);
+    }
+    free(L);
+    free(U);
+    free(C);
+    #pragma endregion
+
+    
 }
