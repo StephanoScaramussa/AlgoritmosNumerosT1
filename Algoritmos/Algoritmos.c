@@ -194,3 +194,154 @@ void resolveLU(int tam, float **L, float **U, float *B, float X[]){
     
     free(y);
 }
+
+void escalonamentoGauss(int tam, float **A, float *B, float *X){
+    float **M = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++){
+        M[i] = (float*)malloc(tam * sizeof(float));
+        for(int j = 0; j < tam; j++){
+            M[i][j] = A[i][j];
+        }
+    }
+    
+    float *b = (float*)malloc(tam * sizeof(float));
+    for(int i = 0; i < tam; i++){
+        b[i] = B[i];
+    }
+    
+    for(int k = 0; k < tam - 1; k++){
+        int pivo = k;
+        for(int i = k + 1; i < tam; i++){
+            if(fabs(M[i][k]) > fabs(M[pivo][k])){
+                pivo = i;
+            }
+        }
+        
+        if(fabs(M[pivo][k]) < 1e-10){
+            printf("Aviso: pivô é zero na coluna %d\n", k);
+            int encontrado = 0;
+            for(int i = k + 1; i < tam; i++){
+                if(fabs(M[i][k]) > 1e-10){
+                    pivo = i;
+                    encontrado = 1;
+                    break;
+                }
+            }
+            if(!encontrado){
+                printf("Nenhum pivô não-nulo na coluna %d\n", k);
+                for(int i = 0; i < tam; i++) free(M[i]);
+                free(M);
+                free(b);
+                return;
+            }
+        }
+
+        // Se pivô é zero, permuta linha pra usar um pivô diferente de zero
+        
+        if(pivo != k){
+            float *temp = M[k];
+            M[k] = M[pivo];
+            M[pivo] = temp;
+            
+            float temp_b = b[k];
+            b[k] = b[pivo];
+            b[pivo] = temp_b;
+        }
+        
+        for(int i = k + 1; i < tam; i++){
+            float fator = M[i][k] / M[k][k];
+            
+            for(int j = k; j < tam; j++){
+                M[i][j] = M[i][j] - fator * M[k][j];
+            }
+            b[i] = b[i] - fator * b[k];
+        }
+    }
+    
+    for(int i = tam - 1; i >= 0; i--){
+        float soma = 0.0f;
+        for(int j = i + 1; j < tam; j++){
+            soma += M[i][j] * X[j];
+        }
+        X[i] = (b[i] - soma) / M[i][i];
+    }
+    
+    for(int i = 0; i < tam; i++){
+        free(M[i]);
+    }
+    free(M);
+    free(b);
+}
+void relatorioDesempenho(int tam, float **A, float **B, int qtd, float acc) {
+    float *C = (float*)malloc(tam * sizeof(float));
+    clock_t start, end;
+
+    // GAUSS-SEIDEL PARA CADA MATRIZ
+    printf("\nGAUSS SEIDEL");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        gaussSeidel(tam, A, C, acc);
+        end = clock();
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    }
+
+    // GAUSS-JACOBI PARA CADA B
+    printf("\nGAUSS JACOBI");
+    for(int s = 0; s < qtd; s++) {
+        for(int j = 0; j < tam; j++) C[j] = B[s][j]; // Pega o sistema B atual
+
+        printf("\n[Sistema %d] ", s + 1);
+        start = clock();
+        gaussJacobi(tam, A, C, acc);
+        end = clock();
+        printf("Tempo: %5.6f seg.\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+    }
+
+    //FATORAÇÃO LU
+    #pragma region
+    float **L = (float**)malloc(tam * sizeof(float*));
+    float **U = (float**)malloc(tam * sizeof(float*));
+    for(int i = 0; i < tam; i++) {
+        L[i] = (float*)malloc(tam * sizeof(float));
+        U[i] = (float*)malloc(tam * sizeof(float));
+    }
+
+    start = clock();
+    fatoracaoLU(tam, A, L, U);
+    end = clock();
+    printf("\nTempo fatoracao LU (matriz A): %5.6f seg.\n\n", ((double)(end - start)) / CLOCKS_PER_SEC);
+
+    // RESOLUÇÃO DO LU PARA CADA MATRIZ B
+    for(int s = 0; s < qtd; s++){
+        for(int j = 0; j < tam; j++) C[j] = B[s][j];
+
+        float *X = (float*)malloc(tam * sizeof(float));
+
+        start = clock();
+        resolveLU(tam, L, U, C, X);
+        end = clock();
+
+        printf("LU - Sistema %d\n", s + 1);
+        if(tam < 200){
+            imprimeVetor(X, tam, "X (LU)");
+        }
+        printf("Tempo: %d (LU): %5.6f seg.\n\n",
+               s + 1, ((double)(end - start)) / CLOCKS_PER_SEC);
+        
+        free(X);
+    }
+
+    for(int i = 0; i < tam; i++) {
+        free(L[i]);
+        free(U[i]);
+    }
+    free(L);
+    free(U);
+    free(C);
+    #pragma endregion
+
+    
+}
